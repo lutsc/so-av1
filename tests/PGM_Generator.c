@@ -28,7 +28,7 @@ int main()
     for(int j = 0; j < W_INT; j++)
     {
       temp = (i+j)%255;
-      fwrite(&temp, sizeof(int), 1, FD);
+      fwrite(&temp, sizeof(char), 1, FD);
     }
   }
   fclose(FD);

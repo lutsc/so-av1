@@ -9,7 +9,7 @@ int main_sender(int argc, char** argv) {
   // argv: img_sender <fifo_path> <input.pgm>
   // Sender only sends image; worker does the filtering through its CLI
 
-  parse_args_or_exit();
+  // parse_args_or_exit(); //TODO:
   
   const char* fifo = argv[1];
   const char* inpath = argv[2];

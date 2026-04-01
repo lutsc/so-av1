@@ -26,7 +26,7 @@ int main_worker(int argc, char** argv) {
 
   // argv: img_worker <fifo_path> <output.pgm> <negative|slice> [t1 t2] [nthreads]
 
-  parse_args_or_exit();
+  // parse_args_or_exit(); //TODO:
   const char* fifo = argv[1];
   const char* outpth = argv[2];
   const char* mode = argv[3];
@@ -40,7 +40,7 @@ int main_worker(int argc, char** argv) {
     g_t2 = atoi(argv[5]);
     g_nthreads = (argc >= 7) ? atoi(argv[6]) : 4;
   } else {
-    exit_error("Invalid mode. Use 'negative' or 'slice'.");
+    // exit_error("Invalid mode. Use 'negative' or 'slice'."); //TODO:
   }
 
   // 1) Ensures FIFO exists and opens for reading (blocks until sender opens for writing)

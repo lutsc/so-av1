@@ -1,5 +1,5 @@
 #ifndef LIBRARY_H
-#define LIBRARY_H
+#define LIBRARY_H 1
 
 #include <stdint.h>
 
@@ -37,5 +37,6 @@ int write_pgm(const char* path, const PGM* img);
 
 /* ===== FIFO ===== */ 
 
-const char* FIFO_PATH = "/tmp/imgpipe";
+#define FIFO_PATH = "/tmp/imgpipe";
+
 #endif
