@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#define H_INT 768
 #define W_INT 1366
+#define H_INT 768
 
-#define H "768 "
 #define W "1366 "
+#define H "768\n"
 #define MAXV "255\n"
 
 int main()

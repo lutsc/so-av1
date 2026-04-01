@@ -1,3 +1,5 @@
 /bin/*
 .cache
 .vscode/
+tests/PGM_Generator
+tests/output.pgm
