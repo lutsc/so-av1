@@ -74,3 +74,19 @@ int write_pgm(const char* path, const PGM* img)
   fclose(fd);
   return 0;
 }
+
+PGM pgm_negative(PGM img)
+{
+  PGM img_negative;
+  img_negative.w = img.w;
+  img_negative.h = img.h;
+  img_negative.maxv = img.maxv;
+  img_negative.data = (unsigned char *)malloc(img.w*img.h);
+
+  for(size_t i = 0; i < (img.w*img.h); i++)
+  {
+    img_negative.data[i] = (img.maxv - img.data[i]);
+  }
+  return img_negative;
+}
+

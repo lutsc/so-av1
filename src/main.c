@@ -6,6 +6,7 @@ int main()
 {
   PGM pgm;
   read_pgm("input.pgm", &pgm);
+  pgm = pgm_negative(pgm);
   write_pgm("output.pgm", &pgm);
 
   return 0;

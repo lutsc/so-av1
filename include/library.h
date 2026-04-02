@@ -35,6 +35,8 @@ int read_pgm(const char* path, PGM* img);
 
 int write_pgm(const char* path, const PGM* img); 
 
+PGM pgm_negative(PGM img);
+
 /* ===== FIFO ===== */ 
 
 #define FIFO_PATH = "/tmp/imgpipe";
