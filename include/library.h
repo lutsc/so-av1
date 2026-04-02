@@ -7,20 +7,20 @@
 // #define MODE_NEG 0
 // #define MODE_SLICE 1 
 
-typedef enum Mode{
+typedef enum OP_Mode{
   MODE_NEG, MODE_SLICE
-} Mode;
+} OP_Mode;
 
 typedef struct {
   uint32_t w, h; 
   uint8_t maxv; // maxv = 255 
-  unsigned char* data; // w*h bytes (grayscale)
+  uint8_t* data; // w*h bytes (grayscale)
 } PGM; 
 
 typedef struct {
   uint32_t w, h;
   uint8_t maxv; // image metadata
-  Mode mode ; // 0=NEGATIVE, 1=SLICE 
+  OP_Mode mode ; // 0=NEGATIVE, 1=SLICE 
   int32_t t1, t2; // valid if mode=SLICE 
 } Header;
 

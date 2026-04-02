@@ -21,7 +21,7 @@ int read_pgm(const char* path, PGM* img){
   }
 
   // Get values of w, h and maxv
-  if (fscanf(fd, "%d %d %d", &img->w, &img->h, &img->maxv) != 3) {
+  if (fscanf(fd, "%"PRIu32" %"PRIu32" %"PRIu8"", &img->w, &img->h, &img->maxv) != 3) {
     fprintf(stderr, "Invalid PGM header.\n");
     fclose(fd);
     return -1;
