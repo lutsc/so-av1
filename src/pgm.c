@@ -3,10 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <fcntl.h>
 
 int read_pgm(const char* path, PGM* img){
   // Open file
-  FILE* fd = fopen(path, "rb");
+  FILE* fd = fopen(path, "O_RDONLY);");
   if(fd == NULL){
     perror("Couldn't open file.");
     return -1;
@@ -54,7 +55,7 @@ int read_pgm(const char* path, PGM* img){
 
 int write_pgm(const char* path, const PGM* img)
 {
-  FILE * fd = fopen(path, "wb");
+  FILE* fd = fopen(path, "O_WRONLY);");
   if(fd == NULL)
   {
     perror("Couldn't open file");
