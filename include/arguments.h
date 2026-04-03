@@ -6,6 +6,7 @@
 #endif
 
 #include <argp.h>
+#include "pgm.h"
 
 #define argp_program_version "so-av2 1.0"
 static char doc[] = "Avaliação de sistemas operacionais, implementação de filtors para arquivos PGM usando threads, sincronização e IPC";
@@ -22,10 +23,12 @@ static struct argp_option options[] =
 
 struct arguments
 {
-  char *args[2];
+  char *args[2]; //args[0] = MODE; args[1] = INPUT_FILE
   bool silent, verbose;
+  OP_Mode mode;
   char *output_file;
+  bool valid;
 };
 
-static error_t parse_opt (int key, char *arg, struct argp_state *state);
+error_t parse_opt (int key, char *arg, struct argp_state *state);
 #endif

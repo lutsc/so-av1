@@ -55,6 +55,11 @@ int read_pgm(const char* path, PGM* img){
 int write_pgm(const char* path, const PGM* img)
 {
   FILE * fd = fopen(path, "wb");
+  if(fd == NULL)
+  {
+    perror("Couldn't open file");
+    return 1;
+  }
 
   fprintf(fd, "P5 ");
   fprintf(fd, "%"PRIu32" ", img->w);
