@@ -1,0 +1,91 @@
+\documentclass[12 pt]{abntex2}
+\usepackage[utf8]{inputenc} % Codificação de caracteres
+% \usepackage[T1]{fontenc} % Seleção de fonte
+\usepackage[brazil]{babel} % Idioma do documento
+\usepackage{graphicx} %For figures
+\usepackage{float} %For figures
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{rsfso}
+\usepackage{mathrsfs}
+\usepackage{lmodern}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    pdftitle={},
+    pdfpagemode=FullScreen,
+}
+
+
+\hbadness=10000 % Suppresses Underfull \hbox warnings
+\hfuzz=9999pt  % Suppresses Overfull \hbox warnings
+
+% \usepackage{pgfplots}
+% \pgfplotsset{compat=1.18}
+
+% \begin{tikzpicture}
+% \begin{axis}[
+%     axis lines = middle, % Draws axes through the origin
+%     xlabel = $x$,
+%     ylabel = {$f(x)$},
+%     xmin=-5, xmax=5,
+%     ymin=-5, ymax=5,
+%     samples=100, % Increase samples for smoother curves
+% ]
+% \addplot[domain=-5:5] {x^2}; % Plots the function y = x^2
+% \end{axis}
+% \end{tikzpicture}
+
+
+\makeatletter
+\renewcommand{\thesection}{%
+  \ifnum\c@chapter<1 \@arabic\c@section
+  \else \thechapter.\@arabic\c@section
+  \fi
+}
+\makeatother
+
+    % \begin{figure}[H]
+    %   \centering
+    %   \includegraphics[width =0.50\linewidth, angle = 0]{file.png}
+    %   \caption{caption about}
+    %   \label{} %if necessary
+    % \end{figure}
+    % Code to add figures
+
+    % \begin{table}[h!]
+    %     \centering
+    %     \caption{Example Table}
+    %     \label{tab:my_table}
+    %     \begin{tabular}{|l|c|r|}
+    %         \hline
+    %         \textbf{Column 1} & \textbf{Column 2} & \textbf{Column 3} \\
+    %         \hline
+    %         Row 1, Cell 1 & Row 1, Cell 2 & Row 1, Cell 3 \\
+    %         Row 2, Cell 1 & Row 2, Cell 2 & Row 2, Cell 3 \\
+    %         \hline
+    %     \end{tabular}
+    % \end{table}
+    % Code for adding tables
+
+
+
+
+\autor{Melkior Gabriel Paim dos Santos}
+\titulo{}
+\instituicao{Universidade do Vale do Itajaí}
+\local{Itajaí - Santa Catarina}
+\data{\today}
+
+\begin{document}
+
+\imprimircapa
+\imprimircapa
+
+\tableofcontents*
+\clearpage
+
+\end{document}
