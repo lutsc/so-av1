@@ -26,21 +26,21 @@ int g_nthreads = 4;
 
 // Filters
 void apply_negative_block(int rs, int re){
-  size_t row, column;
-  size_t i = (g_in.w * row) + column;
-  for(row = rs; row < re; row++){
-    for(column = 0; column < g_in.w; column++){
+  size_t i;
+  for(size_t row = rs; row < re; row++){
+    for(size_t column = 0; column < g_in.w; column++){
+      i = (g_in.w * row) + column;
       g_out.data[i] = (g_in.maxv - g_in.data[i]);
     }
   }
 }
 
 void apply_slice_block(int rs, int re, int t1, int t2){
-  size_t row, column;
-  size_t i = (g_in.w * row) + column;
-  for(row = rs; row < re; row++){
-    for(column = 0; column < g_in.w; column++){
-      if(g_in.data[i] <= g_t1 || g_in.data[i] >= g_t2){
+  size_t i;
+  for(size_t row = rs; row < re; row++){
+    for(size_t column = 0; column < g_in.w; column++){
+      i = (g_in.w * row) + column;
+      if(g_in.data[i] <= t1 || g_in.data[i] >= t2){
         g_out.data[i] = 255;
       }else{
         g_out.data[i] = g_in.data[i];
@@ -54,7 +54,7 @@ void* worker_thread(void* arg){
   while(1){
     
   }
-  return NULL; 
+  pthread_exit(NULL); 
 }
 
 int main_worker(int argc, char** argv) {
@@ -97,7 +97,7 @@ int main_worker(int argc, char** argv) {
   size_t img_size = ((size_t)g_in.w * (size_t)g_in.h);
   g_in.data = (unsigned char*)malloc(img_size);
   if(g_in.data == NULL){
-    fprintf(stderr, "Couldn't allocate memory for image data..\n");
+    fprintf(stderr, "Couldn't allocate memory for image data.\n");
     close(fd);
     return 1;
   }
@@ -105,15 +105,22 @@ int main_worker(int argc, char** argv) {
   read(fd, g_in.data, img_size);
 
   // 3) Creates thread pool and task queue (doesn't need to be a thread pool)
-  // sem_init(&sem_items, 0, gnthreads);
-  // pthread_t threads[g_nthreads];
+  sem_init(&sem_items, 0, g_nthreads);
+  pthread_t threads[g_nthreads];
+  for(int i = 0; i < g_nthreads; i++){
+    pthread_create(&threads[i], NULL, worker_thread, NULL);
+  }
 
   // 4) Waits for all tasks to finish
+  for(int i = 0; i < g_nthreads; i++){
+    pthread_join(threads[i], NULL);
+  }
   
   // 5) Writes output image
-  // write_pgm(outpath, &g_out);
-
+  write_pgm(outpath, &g_out);
+  
   // 6) Frees resources
+  sem_destroy(&sem_items);
   close(fd);
 
   return 0;
