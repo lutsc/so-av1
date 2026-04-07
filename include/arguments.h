@@ -17,7 +17,7 @@
 #include "pgm.h"
 
 #define argp_program_version "so-av2 1.0"
-static char doc[] = "Avaliação de sistemas operacionais, implementação de filtors para arquivos PGM usando threads, sincronização e IPC";
+static char doc[] = "Avaliação de sistemas operacionais, implementação de filtros para arquivos PGM usando threads, sincronização e IPC";
 
 static char args_doc[] = "COMMAND [ARG1] [ARG2]";  
 static struct argp_option options[] =
@@ -28,7 +28,7 @@ static struct argp_option options[] =
   {"range", 'r', "RANGE", 0, "Specify the range for the slice operation (T1xT2)"},
   {"threads", 't', "Threads", 0, "Specify the max number of threads to run"},
   {"output", 'o', "FILE", 0, "Output to FILE instead of modifying input"},
-  // {0},
+  {0},
 };
 
 OP_Mode parse_mode(char * mode);

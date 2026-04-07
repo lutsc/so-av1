@@ -24,6 +24,39 @@ OP_Mode g_mode; // MODE_NEG or MODE_SLICE
 int g_t1, g_t2;
 int g_nthreads = 4;
 
+// Filters
+void apply_negative_block(int rs, int re){
+  size_t row, column;
+  size_t i = (g_in.w * row) + column;
+  for(row = rs; row < re; row++){
+    for(column = 0; column < g_in.w; column++){
+      g_out.data[i] = (g_in.maxv - g_in.data[i]);
+    }
+  }
+}
+
+void apply_slice_block(int rs, int re, int t1, int t2){
+  size_t row, column;
+  size_t i = (g_in.w * row) + column;
+  for(row = rs; row < re; row++){
+    for(column = 0; column < g_in.w; column++){
+      if(g_in.data[i] <= g_t1 || g_in.data[i] >= g_t2){
+        g_out.data[i] = 255;
+      }else{
+        g_out.data[i] = g_in.data[i];
+      }
+    }
+  }
+}
+
+// Thread
+void* worker_thread(void* arg){
+  while(1){
+    
+  }
+  return NULL; 
+}
+
 int main_worker(int argc, char** argv) {
 
   // argv: img_worker <fifo_path> <output.pgm> <negative|slice> [t1 t2] [nthreads]
@@ -60,20 +93,28 @@ int main_worker(int argc, char** argv) {
   g_in.w = header.w;
   g_in.h = header.h;
   g_in.maxv = header.maxv;
-  size_t img_size = (size_t)header.w * (size_t)header.h;
+
+  size_t img_size = ((size_t)g_in.w * (size_t)g_in.h);
   g_in.data = (unsigned char*)malloc(img_size);
+  if(g_in.data == NULL){
+    fprintf(stderr, "Couldn't allocate memory for image data..\n");
+    close(fd);
+    return 1;
+  }
+
   read(fd, g_in.data, img_size);
 
   // 3) Creates thread pool and task queue (doesn't need to be a thread pool)
-  
+  // sem_init(&sem_items, 0, gnthreads);
+  // pthread_t threads[g_nthreads];
+
   // 4) Waits for all tasks to finish
   
   // 5) Writes output image
-  write_pgm(outpath, &g_out);
+  // write_pgm(outpath, &g_out);
 
   // 6) Frees resources
-  
-  // 7) End
+  close(fd);
 
   return 0;
 }
