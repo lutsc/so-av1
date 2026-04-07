@@ -21,6 +21,9 @@ error_t parse_opt (int key, char *arg, struct argp_state* state)
     case 'r':
       arguments->range = arg;
       break;
+    case 't':
+      arguments->threads = atoi(arg);
+      break;
 
     case ARGP_KEY_ARG:
       if (state->arg_num >= 2) //Too many arguments

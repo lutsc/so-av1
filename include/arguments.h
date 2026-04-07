@@ -26,6 +26,7 @@ static struct argp_option options[] =
   {"quiet", 'q', 0, 0, "Don't produce any output"},
   {"silent", 's', 0, OPTION_ALIAS},
   {"range", 'r', "RANGE", 0, "Specify the range for the slice operation (T1xT2)"},
+  {"threads", 't', "Threads", 0, "Specify the max number of threads to run"},
   {"output", 'o', "FILE", 0, "Output to FILE instead of modifying input"},
   // {0},
 };
@@ -37,6 +38,7 @@ struct arguments
 {
   char *args[2]; //args[0] = MODE; args[1] = INPUT_FILE
   bool silent, verbose;
+  uint32_t threads;
   char *range;
   char *output_file;
 };

@@ -14,10 +14,12 @@ int main(int argc, char* argv[])
   arguments.verbose = 0;
   arguments.range = "100-110";
   arguments.output_file = "output.pgm";
+  arguments.threads = 4;
 
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
   OP_Mode mode = parse_mode(arguments.args[0]);
   uint8_t t1, t2;
+  printf("%d\n", arguments.threads);
 
   const char * input = arguments.args[1];
 
