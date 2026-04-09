@@ -1,4 +1,5 @@
 #include "pgm.h"
+#include "arguments.h"
 #include <stdio.h>
 // #include <pthread.h>
 // #include <unistd.h>
@@ -8,25 +9,30 @@
 #include <errno.h>
 
 // Basic structure for Sender
+
+struct argp argp = {options_sender, parse_opt_sender, args_doc_sender, doc_sender};
 int main(int argc, char** argv){
 
   // argv: img_sender <fifo_path> <input.pgm>
   // Sender only sends image; worker does the filtering through its CLI
 
   // parse_args_or_exit(); //TODO:
-  
-  const char* fifo = argv[1];
-  const char* inpath = argv[2];
-  
+  // char *fifo = argv[1];
+  // const char *inpath = argv[2];
+
+  struct arguments_sender args;
+  init_args_sender(&args);
+  argp_parse(&argp, argc, argv, 0, 0, &args);
+
   // 1) Ensure FIFO exists (mkfifo if necessary)
-  if(mkfifo(fifo, 0666) == -1 && errno != EEXIST){
+  if(mkfifo(args.fifo, 0666) == -1 && errno != EEXIST){
     perror("Error creating FIFO.");
     return 1;
   }
   
   // 2) Read PGM image (P5) from disk
   PGM pgm;
-  read_pgm(inpath, &pgm);
+  read_pgm(args.input_file, &pgm);
 
   // 3) Prepare header (mode/t1/t2 are ignoned by the worker, send only image metadata) 
   Header header;
@@ -35,7 +41,7 @@ int main(int argc, char** argv){
   header.maxv = pgm.maxv;
   
   // 4) Open FIFO for writing (blocked until worker opens for reading)
-  FILE* fd = fopen(fifo, "wb");
+  FILE* fd = fopen(args.fifo, "wb");
   if(fd == NULL){
     perror("Error opening FIFO for writing.");
     free(pgm.data);

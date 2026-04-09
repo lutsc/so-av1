@@ -1,4 +1,5 @@
 #include "pgm.h"
+#include "arguments.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -22,8 +23,8 @@ int remaining_tasks = 0;
 // Shared data for processing
 PGM g_in, g_out;
 OP_Mode g_mode; // MODE_NEG or MODE_SLICE
-int g_t1, g_t2;
-int g_nthreads = 4;
+uint8_t g_t1, g_t2;
+uint32_t g_nthreads = 4;
 
 // Filters
 void apply_negative_block(int rs, int re){
@@ -58,41 +59,53 @@ void* worker_thread(void* arg){
   pthread_exit(NULL); 
 }
 
+struct argp argp = {options_worker, parse_opt_worker, args_doc_woker, doc_worker};
 int main(int argc, char** argv) {
 
   // argv: img_worker <fifo_path> <output.pgm> <negative|slice> [t1 t2] [nthreads]
 
   // parse_args_or_exit(); //TODO:
-  const char* fifo = argv[1];
-  const char* outpath = argv[2];
-  const char* mode = argv[3];
+  // const char* fifo = argv[1];
+  // const char* outpath = argv[2];
+  // const char* mode = argv[3];
 
-  if(strcmp(mode, "negative") == 0){
-    g_mode = MODE_NEG;
-    g_nthreads = (argc >= 5) ? atoi(argv[4]) : 4;
-  }else if(strcmp(mode, "slice") == 0){
-    g_mode = MODE_SLICE;
-    g_t1 = atoi(argv[4]);
-    g_t2 = atoi(argv[5]);
-    g_nthreads = (argc >= 7) ? atoi(argv[6]) : 4;
-  }else{
-    fprintf(stderr, "Invalid mode. Use 'negative' or 'slice'.");
-    return 1;
-  }
+  struct arguments_worker args;
+  init_args_worker(&args);
+  argp_parse(&argp, argc, argv, 0, 0, &args);
+
+  g_mode = args.mode;
+  g_t1 = args.t1;
+  g_t2 = args.t2;
+  g_nthreads = args.threads;
+
+  // NOTE: Removed this section as it was just used for getting the mode
+  //
+  // if(strcmp(mode, "negative") == 0){
+  //   g_mode = MODE_NEG;
+  //   g_nthreads = (argc >= 5) ? atoi(argv[4]) : 4;
+  // }else if(strcmp(mode, "slice") == 0){
+  //   g_mode = MODE_SLICE;
+  //   g_t1 = atoi(argv[4]);
+  //   g_t2 = atoi(argv[5]);
+  //   g_nthreads = (argc >= 7) ? atoi(argv[6]) : 4;
+  // }else{
+  //   fprintf(stderr, "Invalid mode. Use 'negative' or 'slice'.");
+  //   return 1;
+  // }
 
   // 1) Ensures FIFO exists and opens for reading (blocks until sender opens for writing)
-  if(mkfifo(fifo, 0666) == -1 && errno != EEXIST){
+  if(mkfifo(args.fifo, 0666) == -1 && errno != EEXIST){
     perror("Error creating FIFO.");
     return 1;
   }
 
-  FILE* fd = fopen(fifo, "rb");
+  FILE* fd = fopen(args.fifo, "rb");
   if(fd == NULL) { 
     fprintf(stderr, "Error opening FIFO for reading.");
     return 1;
   }
 
-  // 2) Reads header + pixels from FIFO
+  // 2) Reads header + pixels from FIFO TODO: Maybe change to cut header as the middle man
   Header header;
   fread(&header, sizeof(Header), 1, fd);
   g_in.w = header.w;
@@ -131,7 +144,7 @@ int main(int argc, char** argv) {
   //   fclose(fd);
   //   return 1;
   // }
-  write_pgm(outpath, &g_out);
+  write_pgm(args.output_file, &g_out);
   
   // 6) Frees resources
   sem_destroy(&sem_items);
