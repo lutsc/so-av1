@@ -42,10 +42,10 @@ void apply_slice_block(int rs, int re, int t1, int t2){
   for(size_t row = rs; row < re; row++){
     for(size_t column = 0; column < g_in.w; column++){
       i = (g_in.w * row) + column;
-      if(g_in.data[i] <= t1 || g_in.data[i] >= t2){
-        g_out.data[i] = 255;
-      }else{
+      if(g_in.data[i] >= t1 && g_in.data[i] <= t2){
         g_out.data[i] = g_in.data[i];
+      }else{
+        g_out.data[i] = 0;
       }
     }
   }
@@ -144,6 +144,8 @@ int main(int argc, char** argv) {
   //   fclose(fd);
   //   return 1;
   // }
+
+
   write_pgm(args.output_file, &g_out);
   
   // 6) Frees resources

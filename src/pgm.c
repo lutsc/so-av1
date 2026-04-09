@@ -126,10 +126,10 @@ PGM pgm_slice(PGM img, uint8_t x, uint8_t y){
   img_slice.data = (unsigned char*)malloc(img_size);
 
   for(size_t i = 0; i < img_size; i++){
-    if(img.data[i] <= x || img.data[i] >= y){
-      img_slice.data[i] = 255;
-    }else{
+    if(img.data[i] >= x && img.data[i] <= y){
       img_slice.data[i] = img.data[i];;
+    }else{
+      img_slice.data[i] = 0;
     }
   }
   return img_slice;

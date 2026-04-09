@@ -52,7 +52,8 @@ error_t parse_opt_worker (int key, char *arg, struct argp_state* state)
       break;
     case 'r':
       {
-        if(!parse_range(arg, &arguments->t1, &arguments->t2)) // Gets t1 and t2 from argument
+        int32_t result = parse_range(arg, &arguments->t1, &arguments->t2);
+        if(result == -1) // Gets t1 and t2 from argument
         {
           argp_usage(state);
         }
