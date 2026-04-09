@@ -88,14 +88,124 @@
 
 \section{Introdução}
 
-Este projeto apresenta a implementação de um sistema de processamento de imagens do tipo PGM P5 (Portable Gray Map em binário), 
-utilizando a linguagem de programação C, com o objetivo de consolidar o aprendizado de IPC, concorrência, threads e paralelismo.
+Este projeto apresenta a implementação de um sistema de processamento de
+imagens do tipo PGM P5, com o objetivo de consolidar o aprendizado sobre
+comunicação entre processos (IPC), threads, concorrência e
+paralelismo em sistemas operacionais Unix/Linux.
+ 
+O sistema é dividido em dois executáveis independentes que se comunicam por
+uma FIFO (named pipe), o processo \textbf{emissor} (\texttt{img\_sender}) lê uma
+imagem PGM do disco e a transmite para a FIFO e o processo \textbf{trabalhador}
+(\texttt{img\_worker}) recebe a imagem, distribui o processamento entre
+múltiplas \textit{threads} por meio de sincronização de tarefas e grava o resultado em disco.
+ 
+A paralelização é realizada por decomposição de linhas: cada \textit{thread}
+processa um subconjunto das linhas da imagem, sem sobreposição, o que garante
+correção sem necessidade de sincronização na escrita dos pixels. A fila de
+tarefas é protegida por \textit{mutex} e semáforos contadores, implementando
+o padrão clássico produtor-consumidor.
 
-O sistema é dividido dois processos: $sender$ e $worker$, onde o $sender$ é responsável por ler uma imagem do tipo PGM P5, 
-decompõe seus metadados e pixels e os envia a uma FIFO, enquanto o $worker$ é responsável por ler o que foi enviado à FIFO, 
-processando os dados por um filtro escolhido e dividindo as tarefas de processamento entre uma quantidade de threads, 
-ambos dados por argumentos, e por fim escrevendo a imagem resultante.
+\section{Fundamentação Teórica}
+ 
+\subsection{Comunicação entre Processos via FIFO}
+ 
+FIFOs (\textit{named pipes}) são arquivos especiais do sistema de arquivos
+Unix que permitem comunicação unidirecional entre processos independentes. A
+abertura de um FIFO é bloqueante: o processo que abre para leitura aguarda
+até que outro processo abra para escrita, garantindo sincronização implícita
+no início da comunicação.
+ 
+\subsection{Threads e Pthreads}
+ 
+\textit{Threads} são unidades de execução que compartilham o mesmo espaço de
+endereçamento dentro de um processo. A biblioteca POSIX Threads (Pthreads)
+fornece as primitivas necessárias:
+ 
+\begin{itemize}
+  \item \texttt{pthread\_create} -- criação de \textit{threads};
+  \item \texttt{pthread\_join} -- aguardar o término de uma \textit{thread};
+%   \item \texttt{pthread\_mutex\_t} -- exclusão mútua para seções críticas.
+\end{itemize}
+ 
+% \subsection{Semáforos}
+ 
+% Semáforos contadores (\texttt{sem\_t}) coordenam produção e consumo de
+% recursos. Neste projeto são utilizados três semáforos:
+ 
+% \begin{itemize}
+%   \item \texttt{sem\_items} -- conta tarefas disponíveis na fila;
+%   \item \texttt{sem\_space} -- conta espaços livres na fila (backpressure);
+%   \item \texttt{sem\_done} -- sinaliza ao processo principal que todas as
+%         tarefas foram concluídas.
+% \end{itemize}
+ 
+\subsection{Filtros de Processamento de Imagem}
+ 
+\subsubsection{Filtro Negativo}
+ 
+Transformação linear que inverte os tons de cinza:
+ 
+\begin{equation}
+  s = 255 - r
+  \label{eq:neg}
+\end{equation}
+ 
+Onde $r$ é o valor do pixel de entrada e $s$ é o pixel de saída.
+ 
+\subsubsection{Limiarização com Fatiamento}
+ 
+Preserva os pixels dentro do intervalo $[t_1, t_2]$ e suprime os demais:
+ 
+\begin{equation}
+  s = \begin{cases}
+    255 & \text{se } r \leq t_1 \text{ ou } r \geq t_2 \\
+    r   & \text{se } t_1 < r < t_2
+  \end{cases}
+  \label{eq:slice}
+\end{equation}
 
+\section{Arquitetura da Solução}
+ 
+A solução é composta por dois processos independentes e um cabeçalho
+compartilhado (\texttt{pgm.h}), conforme descrito a seguir.
+ 
+\subsection{Estruturas de Dados}
+ 
+\textbf{Estruturas principais -- \texttt{pgm.h}}
+\begin{lstlisting}[language=C]
+typedef struct{
+    char type[3];
+    uint32_t w, h; 
+    uint8_t maxv; 
+    uint8_t* data;
+} PGM; 
+
+typedef struct{
+    uint32_t w, h;
+    uint8_t maxv;
+    OP_Mode mode; 
+    uint8_t t1, t2; 
+} Header;
+
+typedef struct{ 
+    uint32_t row_start; 
+    uint32_t row_end; 
+} Task;
+\end{lstlisting}
+ 
+\subsection{Fluxo de Dados}
+ 
+\begin{enumerate}
+  \item \texttt{img\_sender} lê a imagem PGM do disco com \texttt{read\_pgm};
+  \item \texttt{img\_sender} abre o FIFO para escrita (bloqueia até \texttt{img\_worker} abrir para leitura);
+  \item \texttt{img\_sender} transmite o \texttt{Header} seguido dos pixels;
+  \item \texttt{img\_worker} recebe os dados e aloca \texttt{g\_in};
+  \item \texttt{img\_worker} cria $N$ \textit{threads} e enfileira $N$ tarefas (uma por \textit{thread});
+  \item Cada \textit{thread} consome uma tarefa, processa as linhas correspondentes em \texttt{g\_out};
+  \item A última \textit{thread} a terminar posta \texttt{sem\_done};
+  \item \texttt{img\_worker} grava \texttt{g\_out} em disco com \texttt{write\_pgm}.
+\end{enumerate}
+ 
 \section{Implementação}
 
 \subsection{Processo Emissor (Sender)}
@@ -142,7 +252,33 @@ Enfim a FIFO é fechada e os recursos alocados para a imagem são liberados.
     fclose(fd);
 \end{lstlisting}  
 
-\subsection{Processo Trabalhador (Worker)}
+% \subsection{Processo Trabalhador (Worker)}
+
+% Novamente, o processo trabalhador garante que a FIFO exista, criando-a caso necessário.
+
+% \begin{lstlisting}[language=C]
+%   mkfifo(args.fifo, 0666);
+% \end{lstlisting}  
+  
+% A FIFO é então aberta para leitura em binário, o que bloqueia o processo trabalhador até que o
+% processo emissor a abra para escrita.
+
+% \begin{lstlisting}[language=C]
+%     FILE* fd = fopen(args.fifo, "rb");
+% \end{lstlisting}  
+
+% O processo trabalhador então lê os metadados e os pixels da imagem da FIFO,
+% armazenando-os na variável g_in.
+
+% \begin{lstlisting}[language=C]
+%     fread(&header, sizeof(Header), 1, fd);
+%     g_in.w = header.w;
+%     g_in.h = header.h;
+%     g_in.maxv = header.maxv;
+
+%     g_in.data = (unsigned char*)malloc(img_size);    
+%     fread(g_in.data, sizeof(unsigned char), img_size, fd);
+% \end{lstlisting}  
 
 
 \end{document}
