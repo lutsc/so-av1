@@ -105,7 +105,7 @@ correção sem necessidade de sincronização na escrita dos pixels. A fila de
 tarefas é protegida por \textit{mutex} e semáforos contadores, implementando
 o padrão clássico produtor-consumidor.
 
-O código-fonte está disponível publicamente em repositório no Github em \url{https://github.com/lutsc/so-av1/}.
+O código-fonte está disponível publicamente em repositório no Github em \url{https://github.com/lutsc/so-av2/}.
 
 \section{Fundamentação Teórica}
  
@@ -220,7 +220,6 @@ entre os processos.
 
 \subsection{Processo Emissor (Sender)}
 
-\textbf{Núcleo do emissor -- \texttt{img\_sender.c}}
 \begin{lstlisting}[language=C, texcl=true]
 // Garante existência da FIFO
 if(mkfifo(args.fifo, 0666) == -1 && errno != EEXIST){
@@ -267,6 +266,108 @@ fclose(fd);
 \end{lstlisting}
 
 \subsection{Processo Trabalhador (Worker)} 
+
+\begin{lstlisting}[language=C, texcl=true]
+// Garante existência da FIFO
+if(mkfifo(args.fifo, 0666) == -1 && errno != EEXIST){
+  perror("Error creating FIFO.");
+  return 1;
+}
+
+// Abre a FIFO para leitura em binário, bloqueando até que o processo emissor a abra para escrita
+FILE* fd = fopen(args.fifo, "rb");
+if(fd == NULL) { 
+  fprintf(stderr, "Error opening FIFO for reading.");
+  return 1;
+}
+
+// Lê os metadados e os pixels da FIFO
+Header header;
+fread(&header, sizeof(Header), 1, fd);
+g_in.w = header.w;
+g_in.h = header.h;
+g_in.maxv = header.maxv;
+
+size_t img_size = ((size_t)g_in.w * (size_t)g_in.h);
+g_in.data = (uint8_t*)malloc(img_size);
+if(g_in.data == NULL){
+  fprintf(stderr, "Couldn't allocate memory for image data.\n");
+  fclose(fd);
+  return 1;
+}
+fread(g_in.data, 1, img_size, fd);
+
+// Prepara a estrutura de dados de saída com os mesmos metadados da imagem de entrada
+g_out.w = g_in.w;
+g_out.h = g_in.h;
+g_out.maxv = g_in.maxv;
+g_out.data = (uint8_t *)malloc(img_size);
+if(g_out.data == NULL){
+  fprintf(stderr, "Couldn't allocate memory for output image data.\n");
+  return -1;
+}
+
+// Calcula os blocos de linhas para cada tarefa da fila estática
+int32_t Q_Rows;
+Q_Rows = header.h / QMAX;
+
+for (size_t i = 0; i < QMAX; i++)
+{
+  queue_buf[i].row_start = i*(Q_Rows);
+  queue_buf[i].row_end = i*(Q_Rows)+ (Q_Rows)-1;
+}
+queue_buf[QMAX-1].row_end = header.h-1;
+
+// Cria as threads e inicia o processamento
+sem_init(&sem, 0, g_nthreads);
+pthread_t threads[g_nthreads];
+for(int i = 0; i < g_nthreads; i++){
+  pthread_create(&threads[i], NULL, worker_thread, NULL);
+}
+
+// Espera todas as threads terminarem o processamento antes de escrever a imagem de saída
+for(int i = 0; i < g_nthreads; i++){
+  pthread_join(threads[i], NULL);
+}
+write_pgm(args.output_file, &g_out);
+  
+// Destroí semáforo e libera recursos alocados
+sem_destroy(&sem);
+free(g_in.data);
+free(g_out.data);
+fflush(fd);
+fclose(fd);
+\end{lstlisting}
+
+\subsection{Worker Thread}
+
+\begin{lstlisting}[language=C, texcl=true]
+void* worker_thread(void* arg){
+  while(1){
+    // Aguarda o semáforo para acessar a fila de tarefas
+    sem_wait(&sem);
+    Task task = queue_buf[q_count];
+    q_count++;
+    sem_post(&sem);
+
+    // Processa o bloco de linhas correspondente à tarefa
+    uint32_t rs = task.row_start, re = task.row_end;
+    if(g_mode == MODE_NEG)
+    {
+      apply_negative_block(rs, re);
+    }
+    else if(g_mode == MODE_SLICE)
+    {
+      apply_slice_block(rs,re, g_t1, g_t2);
+    }
+    // Encerra a thread se todas as tarefas foram consumidas
+    if(q_count >= QMAX)
+    {
+      pthread_exit(NULL); 
+    }
+  } 
+}
+\end{lstlisting}
 
 \subsection{Filtros}
  
@@ -330,15 +431,15 @@ a seção crítica ao mesmo tempo. Isso garante que \texttt{q\_count} seja
 incrementado de forma segura e que cada entrada de \texttt{queue\_buf} seja
 processada exatamente uma vez, sem \textit{mutex} explícito.
  
-\subsection{Semântica do Filtro de Fatiamento}
+% \subsection{Semântica do Filtro de Fatiamento}
  
-É importante notar que a implementação do filtro de limiarização com
-fatiamento adota semântica de \textit{realce de banda}: pixels dentro do
-intervalo $[t_1, t_2]$ são mantidos e os demais são zerados (preto), em
-contraste com a versão que suprime os pixels da banda atribuindo-lhes o
-valor 255 (branco). A escolha da saída para pixels fora da banda -- zero ou
-255 -- define se o fundo é preto ou branco e deve ser documentada junto aos
-parâmetros de execução.
+% É importante notar que a implementação do filtro de limiarização com
+% fatiamento adota semântica de \textit{realce de banda}: pixels dentro do
+% intervalo $[t_1, t_2]$ são mantidos e os demais são zerados (preto), em
+% contraste com a versão que suprime os pixels da banda atribuindo-lhes o
+% valor 255 (branco). A escolha da saída para pixels fora da banda -- zero ou
+% 255 -- define se o fundo é preto ou branco e deve ser documentada junto aos
+% parâmetros de execução.
  
 \subsection{Comunicação via FIFO}
  
