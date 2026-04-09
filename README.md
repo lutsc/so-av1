@@ -1,8 +1,10 @@
 # Avaliação M1 - IPC, Threads e Paralelismo
 
-## Como compilar
+## Como baixar e compilar
 ```
-cd build
-cmake ..
-make
+$ git clone https://github.com/lutsc/so-av2
+$ cd so-av2
+$ cd build
+$ cmake ..
+$ make
 ```
