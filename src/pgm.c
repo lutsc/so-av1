@@ -6,7 +6,7 @@
 #include <ctype.h>
 
 void ignoreComments(FILE *fd){
-  int ch;
+  int32_t ch;
   while((ch = fgetc(fd)) != EOF && isspace(ch)); // Skips whitespace
   if(ch == '#'){ // If is a comment
     while((ch = fgetc(fd)) != EOF && ch != '\n'); // Skips until end of line

@@ -20,7 +20,7 @@
 
 // Worker arguments
 static char doc_worker[] = "Avaliação de sistemas operacionais, implementação de filtros para arquivos PGM usando threads, sincronização e IPC (arquivo worker)";
-static char args_doc_woker[] = "COMMAND [ARG1] [ARG2]"; //TODO: Update doc worker text
+static char args_doc_woker[] = "MODE(negative/slice)";
 
 static struct argp_option options_worker[] =
 {
@@ -35,7 +35,7 @@ static struct argp_option options_worker[] =
 };
 
 
-struct arguments_worker //TODO:Update the arguments_worker structure
+struct arguments_worker
 {
   OP_Mode mode; // args[0] = MODE;
   bool silent, verbose;
@@ -57,7 +57,7 @@ void init_args_worker(struct arguments_worker * args);
 
 // Sender arguments
 static char doc_sender[] = "Avaliação de sistemas operacionais, implementação de filtros para arquivos PGM usando threads, sincronização e IPC (arquivo sender)";
-static char args_doc_sender[] = "COMMAND [ARG1] [ARG2]"; //TODO: Update doc sender text
+static char args_doc_sender[] = "INPUT_PATH";
 static struct argp_option options_sender[] =
 {
   {"verbose", 'v', 0, 0, "Produce verbose output"},

@@ -1,24 +1,12 @@
 #include "pgm.h"
 #include "arguments.h"
 #include <stdio.h>
-// #include <pthread.h>
-// #include <unistd.h>
 #include <stdlib.h>
-// #include <fcntl.h>
 #include <sys/stat.h>
 #include <errno.h>
 
-// Basic structure for Sender
-
 struct argp argp = {options_sender, parse_opt_sender, args_doc_sender, doc_sender};
 int main(int argc, char** argv){
-
-  // argv: img_sender <fifo_path> <input.pgm>
-  // Sender only sends image; worker does the filtering through its CLI
-
-  // parse_args_or_exit(); //TODO:
-  // char *fifo = argv[1];
-  // const char *inpath = argv[2];
 
   struct arguments_sender args;
   init_args_sender(&args);
@@ -34,7 +22,7 @@ int main(int argc, char** argv){
   PGM pgm;
   read_pgm(args.input_file, &pgm);
 
-  // 3) Prepare header (mode/t1/t2 are ignoned by the worker, send only image metadata) 
+  // 3) Prepare header
   Header header;
   header.w = pgm.w;
   header.h = pgm.h;
