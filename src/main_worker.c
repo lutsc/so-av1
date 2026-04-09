@@ -21,7 +21,7 @@ uint8_t g_t1, g_t2;
 uint32_t g_nthreads = 4;
 
 // Filters
-void apply_negative_block(int rs, int re){
+void apply_negative_block(size_t rs, size_t re){
   size_t i;
   for(size_t row = rs; row <= re; row++){
     for(size_t column = 0; column < g_in.w; column++){
@@ -31,10 +31,9 @@ void apply_negative_block(int rs, int re){
   }
 }
 
-void apply_slice_block(int rs, int re, int t1, int t2){
+void apply_slice_block(size_t rs, size_t re, uint8_t t1, uint8_t t2){
   size_t i;
-
-  for(size_t row = rs; row < re; row++){
+  for(size_t row = rs; row <= re; row++){
     for(size_t column = 0; column < g_in.w; column++){
       i = (g_in.w * row) + column;
       if(g_in.data[i] >= t1 && g_in.data[i] <= t2){
