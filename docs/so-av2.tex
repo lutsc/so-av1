@@ -105,7 +105,7 @@ correção sem necessidade de sincronização na escrita dos pixels. A fila de
 tarefas é protegida por \textit{mutex} e semáforos contadores, implementando
 o padrão clássico produtor-consumidor.
 
-O código-fonte está disponível publicamente em repositório no GitHub \cite{https://github.com/lutsc/so-av1/}.
+O código-fonte está disponível publicamente em repositório no Github em \url{https://github.com/lutsc/so-av1/}.
 
 \section{Fundamentação Teórica}
  
@@ -210,9 +210,9 @@ entre os processos.
   \item \texttt{img\_sender} abre o FIFO para escrita (bloqueia até \texttt{img\_worker} abrir para leitura);
   \item \texttt{img\_sender} transmite o \texttt{Header} seguido dos pixels;
   \item \texttt{img\_worker} recebe os dados e aloca \texttt{g\_in};
-  \item \texttt{img\_worker} cria $N$ \textit{threads} e enfileira $N$ tarefas (uma por \textit{thread});
-  \item Cada \textit{thread} consome uma tarefa, processa as linhas correspondentes em \texttt{g\_out};
-  \item A última \textit{thread} a terminar posta \texttt{sem\_done};
+  \item \texttt{img\_worker} cria $N$ \textit{threads} e enfileira $Q$ \textit{tasks} baseado em um limite arbitrário;
+  \item Cada \textit{thread} consome uma \textit{task} e processa as linhas correspondentes em \texttt{g\_out};
+  \item Cada \textit{thread} é encerrada quando ela não possuí mais \textit{tasks} para receber;
   \item \texttt{img\_worker} grava \texttt{g\_out} em disco com \texttt{write\_pgm}.
 \end{enumerate}
  
